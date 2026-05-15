@@ -26,7 +26,7 @@ app.get('/config.json', (req, res) => {
         "lang": {
             "en-US": {
                 "name": "Girik WhatsApp",
-                "description": "Sends a WhatsApp message per contact via Twilio"
+                "description": "Sends a WhatsApp message per contact via Meta"
             }
         },
         "arguments": {
@@ -51,7 +51,7 @@ app.get('/config.json', (req, res) => {
         },
         "userInterfaces": {
             "configModal": {
-                "url": "REPLACE_WITH_YOUR_CLOUDPAGE_URL",
+                "url": "https://mc97sb5jfx5jwlk8yysdds5268h1.pub.sfmc-content.com/yprzqywxqqm",
                 "width": 800,
                 "height": 600
             }
