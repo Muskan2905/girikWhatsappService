@@ -18,8 +18,8 @@ app.get('/config.json', (req, res) => {
     res.json({
         "workflowApiVersion": "1.1",
         "metaData": {
-            "icon": "https://res.cloudinary.com/dwdj0l58l/image/upload/v1771527602/icons8-whatsapp-48.png",
-            "smallIcon": "https://res.cloudinary.com/dwdj0l58l/image/upload/v1771527602/icons8-whatsapp-48.png",
+            "icon": "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg",
+            "smallIcon": "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg",
             "category": "message"
         },
         "type": "REST",
