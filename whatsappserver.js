@@ -13,6 +13,61 @@ app.use((req, res, next) => {
     next();
 });
 
+// ─── SFMC CREDENTIALS ─────────────────────────────────────────────────────────
+const SFMC_CLIENT_ID     = process.env.SFMC_CLIENT_ID;
+const SFMC_CLIENT_SECRET = process.env.SFMC_CLIENT_SECRET;
+const SFMC_MID           = process.env.SFMC_MID;
+const SFMC_SUBDOMAIN     = 'mc97sb5jfx5jwlk8yysdds5268h1';
+const TEMPLATES_DE_KEY   = '6A0F8F29-E201-4064-AB1F-1986FF072B2A'; // your WA templates DE external key
+
+// ─── SFMC TOKEN CACHE ─────────────────────────────────────────────────────────
+let sfmcToken = null;
+let sfmcTokenExpiry = 0;
+
+async function getSfmcToken() {
+    const now = Date.now();
+    if (sfmcToken && now < sfmcTokenExpiry) return sfmcToken;
+
+    const body = JSON.stringify({
+        grant_type:    'client_credentials',
+        client_id:     SFMC_CLIENT_ID,
+        client_secret: SFMC_CLIENT_SECRET,
+        account_id:    SFMC_MID
+    });
+
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: `${SFMC_SUBDOMAIN}.auth.marketingcloudapis.com`,
+            path:     '/v2/token',
+            method:   'POST',
+            headers: {
+                'Content-Type':   'application/json',
+                'Content-Length': Buffer.byteLength(body)
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    const parsed = JSON.parse(data);
+                    if (!parsed.access_token) return reject(new Error('No access_token: ' + data));
+                    sfmcToken = parsed.access_token;
+                    sfmcTokenExpiry = Date.now() + ((parsed.expires_in - 300) * 1000);
+                    resolve(sfmcToken);
+                } catch (e) {
+                    reject(new Error('Token parse error: ' + e.message));
+                }
+            });
+        });
+
+        req.on('error', reject);
+        req.write(body);
+        req.end();
+    });
+}
+
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 app.get('/config.json', (req, res) => {
     res.json({
@@ -26,7 +81,7 @@ app.get('/config.json', (req, res) => {
         "lang": {
             "en-US": {
                 "name": "Girik WhatsApp",
-                "description": "Sends a WhatsApp message per contact via Meta"
+                "description": "Sends a WhatsApp message per contact via Twilio"
             }
         },
         "arguments": {
@@ -51,7 +106,7 @@ app.get('/config.json', (req, res) => {
         },
         "userInterfaces": {
             "configModal": {
-                "url": "https://mc97sb5jfx5jwlk8yysdds5268h1.pub.sfmc-content.com/yprzqywxqqm",
+                "url": "REPLACE_WITH_YOUR_CLOUDPAGE_URL",
                 "width": 800,
                 "height": 600
             }
@@ -60,9 +115,9 @@ app.get('/config.json', (req, res) => {
 });
 
 // ─── LIFECYCLE ENDPOINTS ──────────────────────────────────────────────────────
-app.post('/save',     (req, res) => { console.log("SAVE");     res.status(200).json({ success: true }); });
-app.post('/publish',  (req, res) => { console.log("PUBLISH");  res.status(200).json({ success: true }); });
-app.post('/stop',     (req, res) => { console.log("STOP");     res.status(200).json({ success: true }); });
+app.post('/save',     (req, res) => { console.log("SAVE");    res.status(200).json({ success: true }); });
+app.post('/publish',  (req, res) => { console.log("PUBLISH"); res.status(200).json({ success: true }); });
+app.post('/stop',     (req, res) => { console.log("STOP");    res.status(200).json({ success: true }); });
 
 app.post('/validate', (req, res) => {
     const inArgs = req.body?.arguments?.execute?.inArguments?.[0];
@@ -71,6 +126,56 @@ app.post('/validate', (req, res) => {
     }
     res.status(200).json({ success: true });
 });
+
+// ─── TEMPLATES ────────────────────────────────────────────────────────────────
+app.get('/templates', async (req, res) => {
+    try {
+        const templates = await fetchTemplates();
+        res.status(200).json({ success: true, templates });
+    } catch (err) {
+        console.error("TEMPLATES error:", err);
+        res.status(200).json({ success: false, message: err.message });
+    }
+});
+
+async function fetchTemplates() {
+    const token = await getSfmcToken();
+
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: `${SFMC_SUBDOMAIN}.rest.marketingcloudapis.com`,
+            path:     `/data/v1/customobjectdata/key/${TEMPLATES_DE_KEY}/rowset`,
+            method:   'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type':  'application/json'
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    const parsed = JSON.parse(data);
+                    const items = parsed.items || [];
+                    const templates = items.map(item => ({
+                        id:   item.values.templateid,
+                        name: item.values.templatename,
+                        body: item.values.templatebody
+                    }));
+                    resolve(templates);
+                } catch (e) {
+                    reject(new Error('Templates parse error: ' + e.message));
+                }
+            });
+        });
+
+        req.on('error', reject);
+        req.setTimeout(9000, () => { req.destroy(); reject(new Error('Templates fetch timed out')); });
+        req.end();
+    });
+}
 
 // ─── EXECUTE ──────────────────────────────────────────────────────────────────
 app.post('/execute', async (req, res) => {
@@ -88,10 +193,12 @@ app.post('/execute', async (req, res) => {
         const messageTitle    = inArgs.messageTitle || '';
         const fromPhoneNumber = inArgs.fromPhoneNumber;
         const toPhoneNumber   = inArgs.toPhoneField;
+        const templateBody    = inArgs.templateBody || '';
 
         console.log(`contactKey: ${contactKey}`);
         console.log(`messageTitle: ${messageTitle}`);
         console.log(`From: ${fromPhoneNumber}, To: ${toPhoneNumber}`);
+        console.log(`templateBody: ${templateBody}`);
 
         if (!contactKey) {
             return res.status(200).json({ success: false, message: "No contactKey in inArguments" });
@@ -106,25 +213,11 @@ app.post('/execute', async (req, res) => {
             return res.status(200).json({ success: false, message: "fromPhoneNumber is empty" });
         }
 
-        const rawTemplate = inArgs.templateBody || '';
-        console.log('rawTemplate:', rawTemplate);
-
-        const messageBody = rawTemplate.replace(
-            /{(\w+)}/g,
-            function(match, fieldName) {
-                const value = inArgs[fieldName];
-                console.log('match:', match, 'fieldName:', fieldName, 'value:', value);
-                return value !== undefined && value !== null ? String(value) : "";
-            }
-        );
-
-        console.log('resolvedBody:', messageBody);
-
         const ssjs_result = await callSsjsCloudPage({
             messageTitle,
             fromPhoneNumber,
             toPhoneNumber,
-            messageBody
+            messageBody: templateBody
         });
 
         console.log("SSJS CloudPage response:", ssjs_result);
@@ -180,5 +273,5 @@ app.get('/', (req, res) => {
 });
 
 // ─── START ────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Girik WhatsApp Service backend on port ${PORT}`));
