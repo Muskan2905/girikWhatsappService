@@ -106,7 +106,7 @@ app.get('/config.json', (req, res) => {
         },
         "userInterfaces": {
             "configModal": {
-                "url": "REPLACE_WITH_YOUR_CLOUDPAGE_URL",
+                "url": "https://mc97sb5jfx5jwlk8yysdds5268h1.pub.sfmc-content.com/yprzqywxqqm",
                 "width": 800,
                 "height": 600
             }
@@ -232,7 +232,7 @@ app.post('/execute', async (req, res) => {
 // ─── HELPER: POST to SSJS CloudPage ──────────────────────────────────────────
 function callSsjsCloudPage(params) {
     return new Promise((resolve, reject) => {
-        const SSJS_CLOUDPAGE_URL = 'REPLACE_WITH_YOUR_WHATSAPP_SSJS_CLOUDPAGE_URL';
+        const SSJS_CLOUDPAGE_URL = 'https://mc97sb5jfx5jwlk8yysdds5268h1.pub.sfmc-content.com/kou5svh5zmg';
 
         const body = Object.entries(params)
             .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
