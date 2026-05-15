@@ -160,7 +160,7 @@ async function fetchTemplates() {
                     const parsed = JSON.parse(data);
                     const items = parsed.items || [];
                     const templates = items.map(item => ({
-                        id:   item.values.templateid,
+                        id:   item.values.templatereferenceid,
                         name: item.values.templatename,
                         body: item.values.templatebody
                     }));
@@ -194,12 +194,12 @@ app.post('/execute', async (req, res) => {
         const fromPhoneNumber = inArgs.fromPhoneNumber;
         const toPhoneNumber   = inArgs.toPhoneField;
         const templateBody    = inArgs.templateBody || '';
-
+        const templateRefId   = inArgs.templateId   || '';   // this is now TemplateReferenceId
         console.log(`contactKey: ${contactKey}`);
         console.log(`messageTitle: ${messageTitle}`);
         console.log(`From: ${fromPhoneNumber}, To: ${toPhoneNumber}`);
         console.log(`templateBody: ${templateBody}`);
-
+        console.log(`templateReferenceId: ${templateRefId}`);
         if (!contactKey) {
             return res.status(200).json({ success: false, message: "No contactKey in inArguments" });
         }
