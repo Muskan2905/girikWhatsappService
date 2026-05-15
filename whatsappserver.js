@@ -163,7 +163,8 @@ async function fetchTemplates() {
                     const templates = items.map(item => ({
                         id:   item.keys.templatereferenceid,
                         name: item.values.templatename,
-                        body: item.values.templatebody
+                        body: item.values.templatebody,
+                        languageCode: item.values.languagecode || 'en'
                     }));
                     resolve(templates);
                 } catch (e) {
