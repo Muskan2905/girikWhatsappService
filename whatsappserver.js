@@ -198,6 +198,7 @@ app.post('/execute', async (req, res) => {
         const templateBody    = inArgs.templateBody || '';
         const templateRefId   = inArgs.templateId   || '';   // this is now TemplateReferenceId
         const variables = inArgs.variables || {};
+        const languageCode = inArgs.languageCode || 'en';
         const parameters = [];
 
         Object.keys(variables)
@@ -242,6 +243,7 @@ app.post('/execute', async (req, res) => {
             templateId: templateRefId,
             fromPhoneNumber,
             toPhoneNumber,
+            languageCode,
             parameters: JSON.stringify(parameters)
         });
 
