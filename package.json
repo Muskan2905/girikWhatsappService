@@ -2,9 +2,9 @@
   "name": "girik-whatsapp-service",
   "version": "1.0.0",
   "description": "WhatsApp messaging service for Journey Builder Custom Activity via Twilio",
-  "main": "whatsappservice.js",
+  "main": "whatsappserver.js",
   "scripts": {
-    "start": "node whatsappservice.js"
+    "start": "node whatsappserver.js"
   },
   "dependencies": {
     "express": "^4.18.2"
