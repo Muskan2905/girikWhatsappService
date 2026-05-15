@@ -18,8 +18,8 @@ app.get('/config.json', (req, res) => {
     res.json({
         "workflowApiVersion": "1.1",
         "metaData": {
-            "icon": "https://res.cloudinary.com/dwdj0l58l/image/upload/v1771527602/icons8-threads-50_i5bnnj.png",
-            "smallIcon": "https://res.cloudinary.com/dwdj0l58l/image/upload/v1771527602/icons8-threads-50_i5bnnj.png",
+            "icon": "https://res.cloudinary.com/dwdj0l58l/image/upload/v1771527602/icons8-whatsapp-48.png",
+            "smallIcon": "https://res.cloudinary.com/dwdj0l58l/image/upload/v1771527602/icons8-whatsapp-48.png",
             "category": "message"
         },
         "type": "REST",
