@@ -159,6 +159,7 @@ async function fetchTemplates() {
                 try {
                     const parsed = JSON.parse(data);
                     const items = parsed.items || [];
+                    console.log(JSON.stringify(items, null, 2));
                     const templates = items.map(item => ({
                         id:   item.values.templatereferenceid,
                         name: item.values.templatename,
