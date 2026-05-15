@@ -196,6 +196,22 @@ app.post('/execute', async (req, res) => {
         const toPhoneNumber   = inArgs.toPhoneField;
         const templateBody    = inArgs.templateBody || '';
         const templateRefId   = inArgs.templateId   || '';   // this is now TemplateReferenceId
+        const variables = inArgs.variables || {};
+        const parameters = [];
+
+        Object.keys(variables)
+            .sort((a, b) => Number(a) - Number(b))
+            .forEach(variableKey => {
+        
+                const fieldName = variables[variableKey];
+        
+                const fieldValue = inArgs[fieldName] || '';
+        
+                parameters.push({
+                    type: 'text',
+                    text: String(fieldValue)
+                });
+            });
         console.log(`contactKey: ${contactKey}`);
         console.log(`messageTitle: ${messageTitle}`);
         console.log(`From: ${fromPhoneNumber}, To: ${toPhoneNumber}`);
@@ -214,11 +230,18 @@ app.post('/execute', async (req, res) => {
             return res.status(200).json({ success: false, message: "fromPhoneNumber is empty" });
         }
 
-        const ssjs_result = await callSsjsCloudPage({
+        /*const ssjs_result = await callSsjsCloudPage({
             messageTitle,
             fromPhoneNumber,
             toPhoneNumber,
             messageBody: templateBody
+        });*/
+
+        const ssjs_result = await callSsjsCloudPage({
+            templateId: templateRefId,
+            fromPhoneNumber,
+            toPhoneNumber,
+            parameters: JSON.stringify(parameters)
         });
 
         console.log("SSJS CloudPage response:", ssjs_result);
