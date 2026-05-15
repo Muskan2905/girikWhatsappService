@@ -258,9 +258,20 @@ function callSsjsCloudPage(params) {
     return new Promise((resolve, reject) => {
         const SSJS_CLOUDPAGE_URL = 'https://mc97sb5jfx5jwlk8yysdds5268h1.pub.sfmc-content.com/kou5svh5zmg';
 
-        const body = Object.entries(params)
+        /*const body = Object.entries(params)
             .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-            .join('&');
+            .join('&');*/
+
+        const body = Object.entries(params)
+    .map(([k, v]) => {
+
+        if (typeof v === 'object') {
+            v = JSON.stringify(v);
+        }
+
+        return `${encodeURIComponent(k)}=${encodeURIComponent(v)}`;
+    })
+    .join('&');
 
         const urlObj = new URL(SSJS_CLOUDPAGE_URL);
 
