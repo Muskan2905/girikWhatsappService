@@ -291,7 +291,24 @@ function callSsjsCloudPage(params) {
         const request = https.request(options, (response) => {
             let data = '';
             response.on('data', chunk => data += chunk);
-            response.on('end', () => resolve({ statusCode: response.statusCode, body: data }));
+            //response.on('end', () => resolve({ statusCode: response.statusCode, body: data }));
+
+            console.log("=== CLOUDPAGE REQUEST ===");
+console.log("POST URL:", SSJS_CLOUDPAGE_URL);
+console.log("POST BODY:", body);
+            response.on('end', () => {
+
+    console.log("=== CLOUDPAGE RESPONSE ===");
+    console.log("Status Code:", response.statusCode);
+    console.log("Headers:", response.headers);
+    console.log("Body:", data);
+
+    resolve({
+        statusCode: response.statusCode,
+        headers: response.headers,
+        body: data
+    });
+});
         });
 
         request.on('error', reject);
